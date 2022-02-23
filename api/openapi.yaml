@@ -4,7 +4,7 @@ openapi: 3.0.1
 info:
   title: Account Service
   description: Service for working with user accounts
-  version: 1.0.0
+  version: 1.1.0
 
 
 paths:
@@ -75,6 +75,39 @@ paths:
         400:
           $ref: '#/components/responses/BadRequest'
 
+  /history/{userId}:
+    get:
+      summary: Get history of transactions
+      parameters:
+        - name: userId
+          in: path
+          description: Id of user whose balance to operate
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: limit
+          in: query
+          description: Page size
+          schema:
+            type: integer
+        - name: cursor
+          in: query
+          description: Id from previous fetch for pagination
+          schema:
+            type: integer
+        - name: sort_by
+          in: query
+          description: Sort order and key
+          schema:
+            type: string
+            example: date.asc
+      responses:
+        200:
+          $ref: '#/components/responses/OK.History'
+        400:
+          $ref: '#/components/responses/BadRequest'
+
 
 components:
   schemas:
@@ -109,11 +142,19 @@ components:
         - $ref: '#/components/schemas/TransactionData'
         - type: object
           properties:
+            id:
+              type: integer
+              format: int64
             date:
               type: string
               format: date
             description:
               type: string
+
+    History:
+      type: array
+      items:
+        $ref: '#/components/schemas/Transaction'
 
     Error:
       type: object
@@ -150,6 +191,13 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Transaction'
+
+    OK.History:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/History'
 
     BadRequest:
       description: Bad request
