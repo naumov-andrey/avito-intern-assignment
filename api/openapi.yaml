@@ -1,0 +1,159 @@
+openapi: 3.0.1
+
+
+info:
+  title: Account Service
+  description: Service for working with user accounts
+  version: 1.0.0
+
+
+paths:
+  /balance/{userId}:
+    get:
+      summary: Get account balance of the user
+      parameters:
+        - name: userId
+          in: path
+          description: Id of user whose balance to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: currency
+          in: query
+          description: Currency to represent the balance
+          required: false
+          example: "USD"
+          schema:
+            type: string
+      responses:
+        200:
+          $ref: '#/components/responses/OK.Balance'
+        400:
+          $ref: '#/components/responses/BadRequest'
+
+    put:
+      summary: Depositing and crediting from the user balance
+      parameters:
+        - name: userId
+          in: path
+          description: Id of user whose balance to operate
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Deposit or credit data
+        content:
+          applciation/json:
+            schema:
+              oneOf:
+                - type: object
+                  properties:
+                    debit:
+                      type: number
+                      format: currecny
+                - type: object
+                  properties:
+                    credit:
+                      type: number
+                      format: currecny
+      responses:
+        200:
+          $ref: '#/components/responses/OK.Balance'
+        400:
+          $ref: '#/components/responses/BadRequest'
+
+  /transfer:
+    post:
+      summary: Transfering from one account to other
+      requestBody:
+        $ref: '#/components/requestBodies/Transfer'
+      responses:
+        200:
+          $ref: '#/components/responses/OK.Transfer'
+        400:
+          $ref: '#/components/responses/BadRequest'
+
+
+components:
+  schemas:
+    Balance:
+      type: number
+      format: currecny
+
+    Account:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          format: int64
+        balance:
+          $ref: '#/components/schemas/Balance'
+
+    TransactionData:
+      type: object
+      properties:
+        debit_user_id:
+          type: integer
+          format: int64
+        credit_user_id:
+          type: integer
+          format: int64
+        amount:
+          type: number
+          format: currecny
+
+    Transaction:
+      allOf:
+        - $ref: '#/components/schemas/TransactionData'
+        - type: object
+          properties:
+            date:
+              type: string
+              format: date
+            description:
+              type: string
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+
+  requestBodies:
+    Transfer:
+      description: Transfer data
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/TransactionData'
+              - type: object
+                properties:
+                  description:
+                    type: string
+
+  responses:
+    OK.Balance:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Balance'
+
+    OK.Transfer:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Transaction'
+
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
