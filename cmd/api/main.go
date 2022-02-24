@@ -37,7 +37,7 @@ func main() {
 	log.Print("Database connection is established")
 
 	r := postgres2.NewAccountRepositoryImpl(db)
-	s := service.NewAccountService(r)
+	s := service.NewAccountService(r, cfg.ExchangeAPI.AccessKey)
 	h := handler.NewHandler(s)
 
 	server := http.Server{

@@ -19,9 +19,14 @@ type HTTPConfig struct {
 	Port string
 }
 
+type ExchangeAPIConfig struct {
+	AccessKey string
+}
+
 type Config struct {
-	Postgres PostgresConfig
-	HTTP     HTTPConfig
+	Postgres    PostgresConfig
+	HTTP        HTTPConfig
+	ExchangeAPI ExchangeAPIConfig
 }
 
 func Init(cfgPath string, cfgName string) (*Config, error) {
@@ -42,6 +47,7 @@ func Init(cfgPath string, cfgName string) (*Config, error) {
 		return nil, err
 	}
 	cfg.Postgres.Password = os.Getenv("DB_PASSWORD")
+	cfg.ExchangeAPI.AccessKey = os.Getenv("API_ACCESS_KEY")
 
 	return &cfg, nil
 }

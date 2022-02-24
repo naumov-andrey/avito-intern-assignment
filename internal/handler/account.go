@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/shopspring/decimal"
 	"net/http"
 	"strconv"
 )
@@ -13,9 +14,16 @@ func (h *Handler) GetBalance(c *gin.Context) {
 		return
 	}
 
-	balance, err := h.accountService.GetBalance(userId)
+	var balance decimal.Decimal
+	currency, ok := c.GetQuery("currency")
+	if ok {
+		balance, err = h.accountService.GetConvertedBalance(userId, currency)
+	} else {
+		balance, err = h.accountService.GetBalance(userId)
+	}
+
 	if err != nil {
-		newErrorResponse(c, http.StatusNotFound, err.Error())
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
