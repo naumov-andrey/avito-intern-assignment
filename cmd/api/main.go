@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/naumov-andrey/avito-intern-assignment/internal/config"
+	"github.com/naumov-andrey/avito-intern-assignment/internal/handler"
+	postgres2 "github.com/naumov-andrey/avito-intern-assignment/internal/repository/postgres"
+	"github.com/naumov-andrey/avito-intern-assignment/internal/service"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
@@ -27,13 +30,20 @@ func main() {
 		cfg.Postgres.Password,
 		cfg.Postgres.DBName,
 		cfg.Postgres.SSLMode)
-	_, err = gorm.Open(postgres.Open(dsn))
+	db, err := gorm.Open(postgres.Open(dsn))
 	if err != nil {
 		log.Fatalf("Failed to connect DB: %s", err)
 	}
 	log.Print("Database connection is established")
 
-	server := http.Server{Addr: ":" + cfg.HTTP.Port}
+	r := postgres2.NewAccountRepositoryImpl(db)
+	s := service.NewAccountService(r)
+	h := handler.NewHandler(s)
+
+	server := http.Server{
+		Addr:    ":" + cfg.HTTP.Port,
+		Handler: h.Init(),
+	}
 
 	go func() {
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {
