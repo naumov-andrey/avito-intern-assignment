@@ -4,11 +4,11 @@ openapi: 3.0.1
 info:
   title: Account Service
   description: Service for working with user accounts
-  version: 1.1.0
+  version: 1.3.0
 
 
 paths:
-  /balance/{userId}:
+  /account/{userId}/balance:
     get:
       summary: Get account balance of the user
       parameters:
@@ -33,7 +33,7 @@ paths:
           $ref: '#/components/responses/BadRequest'
 
     put:
-      summary: Depositing and crediting from the user balance
+      summary: Debiting and crediting from the user balance
       parameters:
         - name: userId
           in: path
@@ -43,39 +43,24 @@ paths:
             type: integer
             format: int64
       requestBody:
-        description: Deposit or credit data
+        description: Debit or credit data
         content:
           applciation/json:
             schema:
-              oneOf:
-                - type: object
-                  properties:
-                    debit:
-                      type: number
-                      format: currecny
-                - type: object
-                  properties:
-                    credit:
-                      type: number
-                      format: currecny
+                type: object
+                properties:
+                  amount:
+                    type: number
+                    format: currecny
+                  description:
+                    type: string
       responses:
         200:
           $ref: '#/components/responses/OK.Balance'
         400:
           $ref: '#/components/responses/BadRequest'
 
-  /transfer:
-    post:
-      summary: Transfering from one account to other
-      requestBody:
-        $ref: '#/components/requestBodies/Transfer'
-      responses:
-        200:
-          $ref: '#/components/responses/OK.Transfer'
-        400:
-          $ref: '#/components/responses/BadRequest'
-
-  /history/{userId}:
+  /account/{userId}/history:
     get:
       summary: Get history of transactions
       parameters:
@@ -108,13 +93,20 @@ paths:
         400:
           $ref: '#/components/responses/BadRequest'
 
+  /transfer:
+    post:
+      summary: Transfering from one account to other
+      requestBody:
+        $ref: '#/components/requestBodies/Transfer'
+      responses:
+        200:
+          $ref: '#/components/responses/OK.Transfer'
+        400:
+          $ref: '#/components/responses/BadRequest'
+
 
 components:
   schemas:
-    Balance:
-      type: number
-      format: currecny
-
     Account:
       type: object
       properties:
@@ -122,39 +114,26 @@ components:
           type: integer
           format: int64
         balance:
-          $ref: '#/components/schemas/Balance'
+          type: number
+          format: currecny
 
-    TransactionData:
+    Transaction:
       type: object
       properties:
-        debit_user_id:
+        id:
           type: integer
           format: int64
-        credit_user_id:
+        date:
+          type: string
+          format: date
+        account_id:
           type: integer
           format: int64
         amount:
           type: number
           format: currecny
-
-    Transaction:
-      allOf:
-        - $ref: '#/components/schemas/TransactionData'
-        - type: object
-          properties:
-            id:
-              type: integer
-              format: int64
-            date:
-              type: string
-              format: date
-            description:
-              type: string
-
-    History:
-      type: array
-      items:
-        $ref: '#/components/schemas/Transaction'
+        description:
+          type: string
 
     Error:
       type: object
@@ -170,12 +149,19 @@ components:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '#/components/schemas/TransactionData'
-              - type: object
-                properties:
-                  description:
-                    type: string
+            type: object
+            properties:
+              debit_user_id:
+                type: integer
+                format: int64
+              credit_user_id:
+                type: integer
+                format: int64
+              amount:
+                type: number
+                format: currecny
+              description:
+                type: string
 
   responses:
     OK.Balance:
@@ -183,21 +169,27 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Balance'
+            $ref: '#/components/schemas/Account'
 
     OK.Transfer:
       description: Success
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Transaction'
+            type: array
+            items:
+              $ref: '#/components/schemas/Transaction'
+            minItems: 2
+            maxItems: 2
 
     OK.History:
       description: Success
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/History'
+            type: array
+            items:
+              $ref: '#/components/schemas/Transaction'
 
     BadRequest:
       description: Bad request
