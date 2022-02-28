@@ -12,20 +12,20 @@ import (
 )
 
 type AccountService struct {
-	repo      repository.AccountRepository
+	repo      repository.Repository
 	accessKey string
 }
 
-func NewAccountService(repo repository.AccountRepository, accessKey string) *AccountService {
+func NewAccountService(repo repository.Repository, accessKey string) *AccountService {
 	return &AccountService{repo, accessKey}
 }
 
 func (s *AccountService) GetBalance(userId int) (decimal.Decimal, error) {
-	return s.repo.GetBalance(userId)
+	return s.repo.Account.GetBalance(userId)
 }
 
 func (s *AccountService) GetConvertedBalance(userId int, currency string) (decimal.Decimal, error) {
-	balance, err := s.repo.GetBalance(userId)
+	balance, err := s.repo.Account.GetBalance(userId)
 	if err != nil {
 		return balance, err
 	}
@@ -48,4 +48,44 @@ func (s *AccountService) GetConvertedBalance(userId int, currency string) (decim
 	}
 
 	return balance.Mul(decimal.NewFromFloat(rate)), nil
+}
+
+func (s *AccountService) UpdateBalance(userId int, amount decimal.Decimal, description string) (decimal.Decimal, error) {
+	if amount.Equal(decimal.Decimal{}) {
+		return s.repo.Account.GetBalance(userId)
+	}
+
+	out, err := s.repo.Atomic(func(r *repository.Repository) (interface{}, error) {
+		var zero decimal.Decimal
+		balance, err := r.Account.GetBalance(userId)
+		if err != nil {
+			return zero, err
+		}
+
+		newBalance := balance.Add(amount)
+		if newBalance.LessThan(zero) {
+			return zero, errors.New("account balance is less than credit amount")
+		}
+
+		err = r.Account.UpdateBalance(userId, newBalance)
+		if err != nil {
+			return zero, err
+		}
+
+		if _, err = r.Transaction.CreateTransaction(userId, amount, description); err != nil {
+			return zero, err
+		}
+
+		balance, err = r.Account.GetBalance(userId)
+		if err != nil {
+			return zero, err
+		}
+		return balance, err
+	})
+
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	return out.(decimal.Decimal), nil
 }

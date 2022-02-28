@@ -2,15 +2,14 @@ package handler
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/naumov-andrey/avito-intern-assignment/internal/model"
 	"github.com/shopspring/decimal"
 	"net/http"
-	"strconv"
 )
 
 func (h *Handler) GetBalance(c *gin.Context) {
-	userId, err := strconv.Atoi(c.Param("userId"))
+	userId, err := getUserId(c)
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "user id must be an integer")
 		return
 	}
 
@@ -27,5 +26,32 @@ func (h *Handler) GetBalance(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{"balance": balance})
+	c.JSON(http.StatusOK, model.Account{UserId: userId, Balance: balance})
+}
+
+func (h *Handler) UpdateBalance(c *gin.Context) {
+	userId, err := getUserId(c)
+	if err != nil {
+		return
+	}
+
+	var input model.UpdateBalanceInput
+	if err = c.ShouldBindJSON(&input); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "Request body must contain amount data")
+		return
+	}
+
+	amount, err := decimal.NewFromString(input.Amount)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "Amount data must be a decimal in format of string")
+		return
+	}
+
+	balance, err := h.accountService.UpdateBalance(userId, amount, input.Description)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, model.Account{UserId: userId, Balance: balance})
 }

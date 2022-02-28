@@ -3,6 +3,8 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/naumov-andrey/avito-intern-assignment/internal/service"
+	"net/http"
+	"strconv"
 )
 
 type Handler struct {
@@ -18,9 +20,10 @@ func (h *Handler) Init() *gin.Engine {
 
 	api := router.Group("/api/v1")
 	{
-		balances := api.Group("/balance")
+		accounts := api.Group("/account")
 		{
-			balances.GET("/:userId", h.GetBalance)
+			accounts.GET("/:userId/balance", h.GetBalance)
+			accounts.PUT("/:userId/balance", h.UpdateBalance)
 		}
 	}
 
@@ -28,5 +31,14 @@ func (h *Handler) Init() *gin.Engine {
 }
 
 func newErrorResponse(c *gin.Context, code int, message string) {
-	c.JSON(code, gin.H{"message": message})
+	c.AbortWithStatusJSON(code, gin.H{"message": message})
+}
+
+func getUserId(c *gin.Context) (int, error) {
+	userId, err := strconv.Atoi(c.Param("userId"))
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "User id must be an integer")
+		return 0, err
+	}
+	return userId, nil
 }

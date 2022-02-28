@@ -5,6 +5,12 @@ import (
 )
 
 type Account struct {
-	UserId  int             `json:"user_id"`
-	Balance decimal.Decimal `json:"balance"`
+	UserId       int             `json:"user_id"`
+	Balance      decimal.Decimal `json:"balance"`
+	Transactions []Transaction   `json:"-" gorm:"foreignKey:AccountId;references:UserId"`
+}
+
+type UpdateBalanceInput struct {
+	Amount      string `json:"amount" binding:"required"`
+	Description string `json:"description"`
 }

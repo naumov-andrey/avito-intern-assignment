@@ -18,8 +18,9 @@ func NewAccountRepositoryImpl(db *gorm.DB) *AccountRepositoryImpl {
 func (r *AccountRepositoryImpl) GetBalance(userId int) (decimal.Decimal, error) {
 	tx := r.db.Begin()
 	defer func() {
-		if recover() != nil {
-			tx.Rollback()
+		if p := recover(); p != nil {
+			_ = tx.Rollback()
+			panic(p)
 		}
 	}()
 
@@ -35,4 +36,8 @@ func (r *AccountRepositoryImpl) GetBalance(userId int) (decimal.Decimal, error) 
 	}
 
 	return account.Balance, nil
+}
+
+func (r *AccountRepositoryImpl) UpdateBalance(userId int, balance decimal.Decimal) error {
+	return r.db.Model(&model.Account{}).Where("user_id = ?", userId).Update("balance", balance).Error
 }
