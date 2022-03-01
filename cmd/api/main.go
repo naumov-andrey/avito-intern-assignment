@@ -42,7 +42,10 @@ func main() {
 		postgres.NewTransactionRepositoryImpl(db),
 		db,
 	)
-	s := service.NewAccountService(r, cfg.ExchangeAPI.AccessKey)
+	s := service.NewService(
+		service.NewBalanceService(r, cfg.ExchangeAPI.AccessKey),
+		service.NewTransactionService(r),
+	)
 	h := handler.NewHandler(s)
 
 	server := http.Server{

@@ -8,11 +8,11 @@ import (
 )
 
 type Handler struct {
-	accountService *service.AccountService
+	service *service.Service
 }
 
-func NewHandler(accountService *service.AccountService) *Handler {
-	return &Handler{accountService}
+func NewHandler(service *service.Service) *Handler {
+	return &Handler{service}
 }
 
 func (h *Handler) Init() *gin.Engine {
@@ -24,6 +24,7 @@ func (h *Handler) Init() *gin.Engine {
 		{
 			accounts.GET("/:userId/balance", h.GetBalance)
 			accounts.PUT("/:userId/balance", h.UpdateBalance)
+			accounts.GET("/:userId/history", h.GetHistory)
 		}
 	}
 

@@ -12,3 +12,8 @@ type Transaction struct {
 	Amount      decimal.Decimal `json:"amount"`
 	Description string          `json:"description"`
 }
+
+type HistoryOutput struct {
+	Data   []Transaction `json:"data"`
+	Cursor int           `json:"cursor"`
+}

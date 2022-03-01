@@ -16,9 +16,9 @@ func (h *Handler) GetBalance(c *gin.Context) {
 	var balance decimal.Decimal
 	currency, ok := c.GetQuery("currency")
 	if ok {
-		balance, err = h.accountService.GetConvertedBalance(userId, currency)
+		balance, err = h.service.Balance.GetConvertedBalance(userId, currency)
 	} else {
-		balance, err = h.accountService.GetBalance(userId)
+		balance, err = h.service.Balance.GetBalance(userId)
 	}
 
 	if err != nil {
@@ -47,7 +47,7 @@ func (h *Handler) UpdateBalance(c *gin.Context) {
 		return
 	}
 
-	balance, err := h.accountService.UpdateBalance(userId, amount, input.Description)
+	balance, err := h.service.Balance.UpdateBalance(userId, amount, input.Description)
 	if err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return

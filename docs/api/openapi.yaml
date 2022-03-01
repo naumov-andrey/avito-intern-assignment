@@ -4,7 +4,7 @@ openapi: 3.0.1
 info:
   title: Account Service
   description: Service for working with user accounts
-  version: 1.3.0
+  version: 1.4.0
 
 
 paths:
@@ -83,10 +83,16 @@ paths:
             type: integer
         - name: sort_by
           in: query
-          description: Sort order and key
+          description: Sort key
           schema:
             type: string
-            example: date.asc
+            example: date
+        - name: order_by
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            example: date
       responses:
         200:
           $ref: '#/components/responses/OK.History'
@@ -187,9 +193,15 @@ components:
       content:
         application/json:
           schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/Transaction'
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+              cursor:
+                type: integer
+                format: int64
 
     BadRequest:
       description: Bad request

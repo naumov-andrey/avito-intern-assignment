@@ -11,20 +11,20 @@ import (
 	"strconv"
 )
 
-type AccountService struct {
+type BalanceService struct {
 	repo      repository.Repository
 	accessKey string
 }
 
-func NewAccountService(repo repository.Repository, accessKey string) *AccountService {
-	return &AccountService{repo, accessKey}
+func NewBalanceService(repo repository.Repository, accessKey string) *BalanceService {
+	return &BalanceService{repo, accessKey}
 }
 
-func (s *AccountService) GetBalance(userId int) (decimal.Decimal, error) {
+func (s *BalanceService) GetBalance(userId int) (decimal.Decimal, error) {
 	return s.repo.Account.GetBalance(userId)
 }
 
-func (s *AccountService) GetConvertedBalance(userId int, currency string) (decimal.Decimal, error) {
+func (s *BalanceService) GetConvertedBalance(userId int, currency string) (decimal.Decimal, error) {
 	balance, err := s.repo.Account.GetBalance(userId)
 	if err != nil {
 		return balance, err
@@ -50,7 +50,7 @@ func (s *AccountService) GetConvertedBalance(userId int, currency string) (decim
 	return balance.Mul(decimal.NewFromFloat(rate)), nil
 }
 
-func (s *AccountService) UpdateBalance(userId int, amount decimal.Decimal, description string) (decimal.Decimal, error) {
+func (s *BalanceService) UpdateBalance(userId int, amount decimal.Decimal, description string) (decimal.Decimal, error) {
 	if amount.Equal(decimal.Decimal{}) {
 		return s.repo.Account.GetBalance(userId)
 	}
