@@ -17,3 +17,22 @@ type HistoryOutput struct {
 	Data   []Transaction `json:"data"`
 	Cursor int           `json:"cursor"`
 }
+
+type TransferInput struct {
+	DebitUserId  int    `json:"debit_user_id" binding:"required"`
+	CreditUserId int    `json:"credit_user_id" binding:"required"`
+	Amount       string `json:"amount" binding:"required"`
+	Description  string `json:"description"`
+}
+
+type TransferData struct {
+	DebitUserId  int
+	CreditUserId int
+	Amount       decimal.Decimal
+	Description  string
+}
+
+type TransferOutput struct {
+	Debit  Transaction `json:"debit"`
+	Credit Transaction `json:"credit"`
+}

@@ -51,3 +51,57 @@ func (s *TransactionService) GetHistory(
 
 	return model.HistoryOutput{Data: data, Cursor: cursor}, nil
 }
+
+func (s *TransactionService) Transfer(transferData model.TransferData) (model.TransferOutput, error) {
+	out, err := s.repo.Atomic(func(r *repository.Repository) (interface{}, error) {
+		creditUserBalance, err := s.repo.Account.GetBalance(transferData.CreditUserId)
+		if err != nil {
+			return model.TransferOutput{}, err
+		}
+
+		if creditUserBalance.LessThan(transferData.Amount) {
+			return model.TransferOutput{}, errors.New("credit account balance is less than amount")
+		}
+
+		credit, err := r.Transaction.CreateTransaction(
+			transferData.CreditUserId,
+			transferData.Amount.Neg(),
+			transferData.Description,
+		)
+		if err != nil {
+			return model.TransferOutput{}, err
+		}
+
+		newCreditBalance := creditUserBalance.Sub(transferData.Amount)
+		if err = r.Account.UpdateBalance(transferData.CreditUserId, newCreditBalance); err != nil {
+			return model.TransferOutput{}, err
+		}
+
+		debit, err := r.Transaction.CreateTransaction(
+			transferData.DebitUserId,
+			transferData.Amount,
+			transferData.Description,
+		)
+		if err != nil {
+			return model.TransferOutput{}, err
+		}
+
+		debitUserBalance, err := s.repo.Account.GetBalance(transferData.DebitUserId)
+		if err != nil {
+			return model.TransferOutput{}, err
+		}
+
+		newDebitBalance := debitUserBalance.Add(transferData.Amount)
+		if err = r.Account.UpdateBalance(transferData.DebitUserId, newDebitBalance); err != nil {
+			return model.TransferOutput{}, err
+		}
+
+		return model.TransferOutput{Debit: debit, Credit: credit}, nil
+	})
+
+	if err != nil {
+		return model.TransferOutput{}, err
+	}
+
+	return out.(model.TransferOutput), nil
+}

@@ -26,6 +26,7 @@ func (h *Handler) Init() *gin.Engine {
 			accounts.PUT("/:userId/balance", h.UpdateBalance)
 			accounts.GET("/:userId/history", h.GetHistory)
 		}
+		api.GET("/transfer", h.Transfer)
 	}
 
 	return router

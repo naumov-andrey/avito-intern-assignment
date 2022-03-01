@@ -2,6 +2,8 @@ package handler
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/naumov-andrey/avito-intern-assignment/internal/model"
+	"github.com/shopspring/decimal"
 	"net/http"
 	"strconv"
 )
@@ -43,6 +45,35 @@ func (h *Handler) GetHistory(c *gin.Context) {
 	}
 
 	out, err := h.service.Transaction.GetHistory(userId, limit, cursor, sortBy, orderBy)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, out)
+}
+
+func (h *Handler) Transfer(c *gin.Context) {
+	var input model.TransferInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "Request body must contain transfer data")
+		return
+	}
+
+	amount, err := decimal.NewFromString(input.Amount)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "Amount data must be a decimal in format of string")
+		return
+	}
+
+	transfer := model.TransferData{
+		DebitUserId:  input.DebitUserId,
+		CreditUserId: input.CreditUserId,
+		Amount:       amount,
+		Description:  input.Description,
+	}
+
+	out, err := h.service.Transaction.Transfer(transfer)
 	if err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
