@@ -1,0 +1,9 @@
+postgres:
+  user: postgres
+  host: db
+  port: 5432
+  dbname: account_service_db
+  sslmode: disable
+
+http:
+  port: 8000
