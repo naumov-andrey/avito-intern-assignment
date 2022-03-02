@@ -4,7 +4,7 @@ openapi: 3.0.1
 info:
   title: Account Service
   description: Service for working with user accounts
-  version: 1.4.1
+  version: 1.4.2
 
 
 paths:
@@ -99,7 +99,7 @@ paths:
         400:
           $ref: '#/components/responses/BadRequest'
 
-  /transfer:
+  /account/transfer:
     post:
       summary: Transfering from one account to other
       requestBody:

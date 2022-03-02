@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/naumov-andrey/avito-intern-assignment/internal/config"
 	"github.com/naumov-andrey/avito-intern-assignment/internal/handler"
-	"github.com/naumov-andrey/avito-intern-assignment/internal/repository"
 	"github.com/naumov-andrey/avito-intern-assignment/internal/repository/postgres"
 	"github.com/naumov-andrey/avito-intern-assignment/internal/service"
 	pg "gorm.io/driver/postgres"
@@ -37,20 +36,16 @@ func main() {
 	}
 	log.Print("Database connection is established")
 
-	r := repository.NewRepository(
+	s := service.NewAccountService(
 		postgres.NewAccountRepositoryImpl(db),
 		postgres.NewTransactionRepositoryImpl(db),
-		db,
-	)
-	s := service.NewService(
-		service.NewBalanceService(r, cfg.ExchangeAPI.AccessKey),
-		service.NewTransactionService(r),
+		cfg.ExchangeAPI.AccessKey,
 	)
 	h := handler.NewHandler(s)
 
 	server := http.Server{
 		Addr:    ":" + cfg.HTTP.Port,
-		Handler: h.Init(),
+		Handler: h.InitRoutes(db),
 	}
 
 	go func() {

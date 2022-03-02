@@ -14,7 +14,7 @@ FROM alpine:latest
 
 WORKDIR /service
 COPY ./configs/docker.yaml ./configs/main.yaml
-COPY .env .
+COPY .env ./
 COPY --from=builder /service/build/account-service ./
 
 ENTRYPOINT ["./account-service"]

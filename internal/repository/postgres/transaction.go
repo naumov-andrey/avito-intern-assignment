@@ -3,6 +3,7 @@ package postgres
 import (
 	"fmt"
 	"github.com/naumov-andrey/avito-intern-assignment/internal/model"
+	"github.com/naumov-andrey/avito-intern-assignment/internal/repository"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 	"time"
@@ -14,6 +15,12 @@ type TransactionRepositoryImpl struct {
 
 func NewTransactionRepositoryImpl(db *gorm.DB) *TransactionRepositoryImpl {
 	return &TransactionRepositoryImpl{db}
+}
+
+func (r *TransactionRepositoryImpl) WithTx(tx *gorm.DB) repository.TransactionRepository {
+	newRepo := *r
+	newRepo.db = tx
+	return &newRepo
 }
 
 func (r *TransactionRepositoryImpl) CreateTransaction(
@@ -75,9 +82,8 @@ func (r *TransactionRepositoryImpl) GetHistoryWithCursor(
 ) ([]model.Transaction, error) {
 	tx := r.db.Begin()
 	defer func() {
-		if p := recover(); p != nil {
+		if r := recover(); r != nil {
 			tx.Rollback()
-			panic(p)
 		}
 	}()
 

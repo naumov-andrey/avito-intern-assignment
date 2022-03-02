@@ -3,6 +3,7 @@ package postgres
 import (
 	"errors"
 	"github.com/naumov-andrey/avito-intern-assignment/internal/model"
+	"github.com/naumov-andrey/avito-intern-assignment/internal/repository"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 )
@@ -15,23 +16,19 @@ func NewAccountRepositoryImpl(db *gorm.DB) *AccountRepositoryImpl {
 	return &AccountRepositoryImpl{db}
 }
 
-func (r *AccountRepositoryImpl) GetBalance(userId int) (decimal.Decimal, error) {
-	tx := r.db.Begin()
-	defer func() {
-		if p := recover(); p != nil {
-			_ = tx.Rollback()
-			panic(p)
-		}
-	}()
+func (r *AccountRepositoryImpl) WithTx(tx *gorm.DB) repository.AccountRepository {
+	newRepo := *r
+	newRepo.db = tx
+	return &newRepo
+}
 
+func (r *AccountRepositoryImpl) GetBalance(userId int) (decimal.Decimal, error) {
 	account := model.Account{UserId: userId}
-	result := tx.First(&account, userId)
+	result := r.db.First(&account, userId)
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		tx.Select("UserId").Create(&account)
-		tx.Commit()
+		r.db.Select("UserId").Create(&account)
 	} else if result.Error != nil {
-		tx.Rollback()
 		return decimal.Decimal{}, result.Error
 	}
 
